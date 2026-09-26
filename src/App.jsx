@@ -1,11 +1,11 @@
 import { useState } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { BrowserRouter, Routes, Route, NavLink, Navigate } from 'react-router-dom';
 import {
   LayoutDashboard, GitBranch, Package, Rocket, Globe, Cpu,
   BarChart2, Shield, CheckSquare, Activity, RotateCcw,
   FileBarChart, FolderOpen, Settings, Bell, Search,
-  HelpCircle, Zap, ChevronDown, Star
+  HelpCircle, Zap, ChevronDown, Star, X
 } from 'lucide-react';
 import { currentUser } from './data/mockData.js';
 
@@ -113,13 +113,103 @@ function Sidebar({ onOpenCopilot }) {
 
 function Topbar({ onOpenCopilot }) {
   const location = useLocation();
+  const navigate = useNavigate();
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [notifOpen, setNotifOpen] = useState(false);
+  const [helpOpen, setHelpOpen] = useState(false);
+  const [userMenuOpen, setUserMenuOpen] = useState(false);
+  const [notifCount, setNotifCount] = useState(12);
+
+  const notifications = [
+    { id: 1, type: 'danger', title: 'Pipeline #142 Failed', desc: 'E-Commerce Platform integration tests failing', time: '10 mins ago', path: '/pipelines/142' },
+    { id: 2, type: 'warning', title: 'Release v2.1.0 Blocked', desc: 'Coverage gate 67% (needs ≥80%) · Awaiting approval', time: '25 mins ago', path: '/approvals' },
+    { id: 3, type: 'warning', title: 'Staging Memory Spike', desc: 'Cluster memory usage at 84% during canary rollout', time: '1 hour ago', path: '/environments' },
+    { id: 4, type: 'success', title: 'Incident RB-104 Auto-Recovered', desc: 'Auth Microservice restored in 1m 24s by Sentry Agent', time: '3 hours ago', path: '/rollback' },
+    { id: 5, type: 'info', title: 'Security Scan Complete', desc: '1 High CVE detected in spring-security:6.1.0', time: '4 hours ago', path: '/security' },
+  ];
+
+  const searchableItems = [
+    { title: 'Pipeline #142 (E-Commerce Platform)', category: 'Pipelines', path: '/pipelines/142' },
+    { title: 'Pipeline #141 (Medical Inventory API)', category: 'Pipelines', path: '/pipelines' },
+    { title: 'Release v2.1.0 (Blocked)', category: 'Releases', path: '/approvals' },
+    { title: 'Release v2.0.9 (Production)', category: 'Releases', path: '/releases' },
+    { title: 'Production Cluster (k8s-prod-us-east-1)', category: 'Environments', path: '/environments' },
+    { title: 'Staging Cluster (k8s-stage-us-east-1)', category: 'Environments', path: '/environments' },
+    { title: 'AI Command Center & Root Cause', category: 'AI Tools', path: '/ai' },
+    { title: 'Emergency Rollback Console', category: 'Rollback', path: '/rollback' },
+    { title: 'Platform Security CVE Scanner', category: 'Security', path: '/security' },
+    { title: 'Release Governance Policies', category: 'Settings', path: '/settings' },
+  ];
+
+  const searchResults = searchableItems.filter(item =>
+    item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    item.category.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   return (
     <header className="topbar">
-      {/* Search — centered */}
-      <div className="topbar-search-wrap">
+      {/* Search — centered & fully functional */}
+      <div className="topbar-search-wrap" style={{ position: 'relative' }}>
         <Search size={14} className="topbar-search-icon" />
-        <input className="topbar-search" placeholder="Search anything..." />
+        <input
+          className="topbar-search"
+          placeholder="Search pipelines, releases, clusters..."
+          value={searchQuery}
+          onChange={(e) => {
+            setSearchQuery(e.target.value);
+            setSearchOpen(true);
+          }}
+          onFocus={() => setSearchOpen(true)}
+        />
+        {searchOpen && searchQuery.trim() && (
+          <div
+            style={{
+              position: 'absolute',
+              top: '100%',
+              left: 0,
+              right: 0,
+              marginTop: 6,
+              background: 'var(--bg-elevated)',
+              border: '1px solid var(--border-accent)',
+              borderRadius: 'var(--r-md)',
+              boxShadow: 'var(--shadow-lg)',
+              zIndex: 100,
+              maxHeight: 280,
+              overflowY: 'auto'
+            }}
+          >
+            {searchResults.length === 0 ? (
+              <div style={{ padding: '12px 14px', fontSize: 12, color: 'var(--text-muted)' }}>
+                No results found for "{searchQuery}".
+              </div>
+            ) : (
+              searchResults.map((res, i) => (
+                <div
+                  key={i}
+                  style={{
+                    padding: '8px 12px',
+                    borderBottom: '1px solid var(--border-subtle)',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between'
+                  }}
+                  onMouseEnter={(e) => e.currentTarget.style.background = 'var(--bg-hover)'}
+                  onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
+                  onClick={() => {
+                    navigate(res.path);
+                    setSearchOpen(false);
+                    setSearchQuery('');
+                  }}
+                >
+                  <span style={{ fontSize: 12.5, color: 'var(--text-primary)', fontWeight: 500 }}>{res.title}</span>
+                  <span className="badge badge-muted" style={{ fontSize: 9.5 }}>{res.category}</span>
+                </div>
+              ))
+            )}
+          </div>
+        )}
       </div>
 
       {/* Right controls */}
@@ -128,23 +218,177 @@ function Topbar({ onOpenCopilot }) {
           <Cpu size={14} /> AI Copilot
         </button>
 
-        <button className="topbar-icon-btn" title="Help">
+        {/* Help button */}
+        <button
+          className="topbar-icon-btn"
+          title="Help & Guides"
+          onClick={() => setHelpOpen(true)}
+        >
           <HelpCircle size={15} />
         </button>
 
-        <button className="topbar-icon-btn" title="Notifications" style={{ position: 'relative' }}>
-          <Bell size={15} />
-          <span className="notif-badge">12</span>
-        </button>
+        {/* Notifications button */}
+        <div style={{ position: 'relative' }}>
+          <button
+            className="topbar-icon-btn"
+            title="Notifications"
+            onClick={() => setNotifOpen(!notifOpen)}
+          >
+            <Bell size={15} />
+            {notifCount > 0 && <span className="notif-badge">{notifCount}</span>}
+          </button>
 
-        <div className="topbar-user">
-          <div className="topbar-avatar">PK</div>
-          <div className="topbar-user-info">
-            <div className="topbar-user-name">{currentUser.name}</div>
-            <div className="topbar-user-role">{currentUser.role.replace('_', ' ')}</div>
+          {notifOpen && (
+            <div
+              style={{
+                position: 'absolute',
+                top: '100%',
+                right: 0,
+                marginTop: 8,
+                width: 340,
+                background: 'var(--bg-card)',
+                border: '1px solid var(--border-muted)',
+                borderRadius: 'var(--r-lg)',
+                boxShadow: 'var(--shadow-lg)',
+                zIndex: 100,
+                overflow: 'hidden'
+              }}
+            >
+              <div style={{ padding: '10px 14px', borderBottom: '1px solid var(--border-subtle)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-primary)' }}>Notifications</span>
+                <span
+                  style={{ fontSize: 11, color: 'var(--accent-light)', cursor: 'pointer' }}
+                  onClick={() => setNotifCount(0)}
+                >
+                  Mark all as read
+                </span>
+              </div>
+              <div style={{ maxHeight: 300, overflowY: 'auto' }}>
+                {notifications.map(n => (
+                  <div
+                    key={n.id}
+                    style={{
+                      padding: '10px 14px',
+                      borderBottom: '1px solid var(--border-subtle)',
+                      cursor: 'pointer',
+                      transition: 'background 0.15s ease'
+                    }}
+                    onMouseEnter={(e) => e.currentTarget.style.background = 'var(--bg-hover)'}
+                    onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
+                    onClick={() => {
+                      navigate(n.path);
+                      setNotifOpen(false);
+                    }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 2 }}>
+                      <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-primary)' }}>{n.title}</span>
+                      <span style={{ fontSize: 10, color: 'var(--text-muted)' }}>{n.time}</span>
+                    </div>
+                    <p style={{ fontSize: 11, color: 'var(--text-secondary)', margin: 0, lineHeight: 1.4 }}>{n.desc}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* User profile dropdown */}
+        <div style={{ position: 'relative' }}>
+          <div
+            className="topbar-user"
+            onClick={() => setUserMenuOpen(!userMenuOpen)}
+          >
+            <div className="topbar-avatar">PK</div>
+            <div className="topbar-user-info">
+              <div className="topbar-user-name">{currentUser.name}</div>
+              <div className="topbar-user-role">{currentUser.role.replace('_', ' ')}</div>
+            </div>
           </div>
+
+          {userMenuOpen && (
+            <div
+              style={{
+                position: 'absolute',
+                top: '100%',
+                right: 0,
+                marginTop: 8,
+                width: 220,
+                background: 'var(--bg-card)',
+                border: '1px solid var(--border-muted)',
+                borderRadius: 'var(--r-lg)',
+                boxShadow: 'var(--shadow-lg)',
+                zIndex: 100,
+                padding: '6px'
+              }}
+            >
+              <div style={{ padding: '8px 10px', borderBottom: '1px solid var(--border-subtle)', marginBottom: 4 }}>
+                <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-primary)' }}>{currentUser.name}</div>
+                <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>{currentUser.email}</div>
+              </div>
+              <button
+                style={{ width: '100%', padding: '7px 10px', background: 'transparent', border: 'none', textAlign: 'left', color: 'var(--text-secondary)', fontSize: 12, borderRadius: 4, cursor: 'pointer' }}
+                onMouseEnter={(e) => e.currentTarget.style.background = 'var(--bg-hover)'}
+                onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
+                onClick={() => {
+                  navigate('/settings');
+                  setUserMenuOpen(false);
+                }}
+              >
+                Settings &amp; Preferences
+              </button>
+              <button
+                style={{ width: '100%', padding: '7px 10px', background: 'transparent', border: 'none', textAlign: 'left', color: 'var(--text-secondary)', fontSize: 12, borderRadius: 4, cursor: 'pointer' }}
+                onMouseEnter={(e) => e.currentTarget.style.background = 'var(--bg-hover)'}
+                onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
+                onClick={() => {
+                  navigate('/audit');
+                  setUserMenuOpen(false);
+                }}
+              >
+                Activity Audit Log
+              </button>
+            </div>
+          )}
         </div>
       </div>
+
+      {/* Help Modal */}
+      {helpOpen && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1100 }}>
+          <div className="card" style={{ width: 520, maxWidth: '92vw', boxShadow: 'var(--shadow-lg)' }}>
+            <div className="card-header">
+              <div className="card-title">
+                <HelpCircle size={16} color="var(--accent-light)" />
+                <span>Release Captain — Quick Help &amp; Shortcuts</span>
+              </div>
+              <button className="topbar-icon-btn" style={{ width: 24, height: 24 }} onClick={() => setHelpOpen(false)}>
+                <X size={14} />
+              </button>
+            </div>
+            <div style={{ padding: 18, fontSize: 12.5, color: 'var(--text-secondary)', lineHeight: 1.6 }}>
+              <p style={{ marginBottom: 12 }}>
+                <strong>Release Captain</strong> is an autonomous AI-driven Release Engineering platform designed for high-velocity CI/CD environments.
+              </p>
+
+              <div style={{ background: 'var(--bg-elevated)', padding: '10px 12px', borderRadius: 'var(--r-md)', marginBottom: 14, border: '1px solid var(--border-subtle)' }}>
+                <div style={{ fontWeight: 700, color: 'var(--text-primary)', marginBottom: 6 }}>Key Platform Capabilities:</div>
+                <ul style={{ paddingLeft: 18, margin: 0, display: 'flex', flexDirection: 'column', gap: 4 }}>
+                  <li><strong>AI Failure Analysis:</strong> Pinpoints root cause (e.g., HikariCP pool starvation) in Pipeline #142.</li>
+                  <li><strong>Quality Governance Gates:</strong> Enforces &ge;80% test coverage before production deploys.</li>
+                  <li><strong>Automated Rollback:</strong> 1-click zero-downtime canary rollback when error spikes occur.</li>
+                  <li><strong>Fleet Monitoring:</strong> Real-time Kubernetes CPU, memory, and 5xx telemetry.</li>
+                </ul>
+              </div>
+
+              <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 12 }}>
+                <button className="btn btn-primary btn-sm" onClick={() => setHelpOpen(false)}>
+                  Got it, close
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </header>
   );
 }
