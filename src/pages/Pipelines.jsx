@@ -100,7 +100,16 @@ export default function Pipelines() {
         <div style={{ flex: 1 }}>
           <strong>Pipeline #142 failed</strong> — E-Commerce Platform · Integration tests failing · AI analysis available
         </div>
-        <button className="btn btn-danger btn-sm">Analyze <ArrowRight size={13} /></button>
+        <button
+          className="btn btn-danger btn-sm"
+          style={{ cursor: 'pointer' }}
+          onClick={(e) => {
+            e.stopPropagation();
+            navigate('/pipelines/142');
+          }}
+        >
+          Analyze <ArrowRight size={13} />
+        </button>
       </div>
 
       {/* Header */}
@@ -110,13 +119,26 @@ export default function Pipelines() {
           <div className="section-subtitle">{pipelineList.length} pipelines across {[...new Set(pipelineList.map(p => p.project))].length} projects</div>
         </div>
         <div style={{ display: 'flex', gap: 10 }}>
-          <button className={`btn btn-ghost btn-sm ${filterBarOpen ? 'btn-primary' : ''}`} onClick={() => setFilterBarOpen(!filterBarOpen)}>
+          <button
+            className={`btn btn-ghost btn-sm ${filterBarOpen ? 'btn-primary' : ''}`}
+            style={{ cursor: 'pointer' }}
+            onClick={() => setFilterBarOpen(!filterBarOpen)}
+          >
             <Filter size={13} /> Filter
           </button>
-          <button className="btn btn-ghost btn-sm" onClick={handleRefresh} disabled={isRefreshing}>
+          <button
+            className="btn btn-ghost btn-sm"
+            style={{ cursor: 'pointer' }}
+            onClick={handleRefresh}
+            disabled={isRefreshing}
+          >
             <RefreshCw size={13} className={isRefreshing ? 'spin' : ''} /> {isRefreshing ? 'Syncing...' : 'Refresh'}
           </button>
-          <button className="btn btn-primary btn-sm" onClick={() => setModalOpen(true)}>
+          <button
+            className="btn btn-primary btn-sm"
+            style={{ cursor: 'pointer' }}
+            onClick={() => setModalOpen(true)}
+          >
             <Play size={13} /> Trigger Pipeline
           </button>
         </div>
@@ -217,7 +239,7 @@ export default function Pipelines() {
 
       {/* Trigger Pipeline Modal */}
       {modalOpen && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 2000 }}>
           <div className="card" style={{ width: 480, maxWidth: '90vw', boxShadow: 'var(--shadow-lg)' }}>
             <div className="card-header">
               <div className="card-title">

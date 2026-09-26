@@ -2,11 +2,11 @@ import { useState } from 'react';
 import {
   Settings, User, Cpu, Shield, Bell, Key, Check,
   Save, RefreshCw, Sliders, ExternalLink, Globe, Lock,
-  Terminal, CheckCircle, Copy
+  Terminal, CheckCircle, Copy, LogOut
 } from 'lucide-react';
 import { currentUser } from '../data/mockData.js';
 
-export default function SettingsPage() {
+export default function SettingsPage({ onLogout }) {
   const [activeTab, setActiveTab] = useState('general');
   const [savedNotice, setSavedNotice] = useState(false);
   const [copiedKey, setCopiedKey] = useState(false);
@@ -227,6 +227,44 @@ export default function SettingsPage() {
                 </div>
                 <span className="badge badge-muted">Muted</span>
               </div>
+            </div>
+          </div>
+
+          {/* Active Session & Logout Card */}
+          <div className="card" style={{ gridColumn: 'span 2', marginTop: 4 }}>
+            <div className="card-header">
+              <div className="card-title">
+                <Shield size={15} color="var(--accent-light)" />
+                <span>Active Session &amp; Security</span>
+              </div>
+              <span className="badge badge-success">Authenticated</span>
+            </div>
+            <div style={{ padding: '16px 18px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 14 }}>
+              <div>
+                <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-primary)' }}>
+                  Signed in as {profile.name} ({profile.email})
+                </div>
+                <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2 }}>
+                  Role: Release Manager · Session Token: JWT (256-bit) · Auto-renewal active
+                </div>
+              </div>
+              <button
+                type="button"
+                className="btn btn-ghost btn-sm"
+                style={{
+                  color: '#f87171',
+                  borderColor: 'var(--danger-border)',
+                  background: 'var(--danger-dim)',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 8,
+                  fontWeight: 600
+                }}
+                onClick={onLogout}
+              >
+                <LogOut size={14} /> Sign Out of Release Captain
+              </button>
             </div>
           </div>
         </div>

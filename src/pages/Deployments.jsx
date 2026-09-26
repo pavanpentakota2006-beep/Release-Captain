@@ -131,6 +131,17 @@ export default function Deployments() {
     strategy: 'Canary (20%)'
   });
   const [deployingAlert, setDeployingAlert] = useState(false);
+  const [isSyncing, setIsSyncing] = useState(false);
+  const [syncNotice, setSyncNotice] = useState(false);
+
+  const handleSyncCluster = () => {
+    setIsSyncing(true);
+    setTimeout(() => {
+      setIsSyncing(false);
+      setSyncNotice(true);
+      setTimeout(() => setSyncNotice(false), 3500);
+    }, 700);
+  };
 
   const filteredDeployments = deployments.filter(d => {
     const matchesEnv = selectedEnv === 'ALL' || d.env.toUpperCase() === selectedEnv;
@@ -189,6 +200,16 @@ export default function Deployments() {
   return (
     <div className="page-enter">
       {/* Toast Notification */}
+      {syncNotice && (
+        <div className="alert-banner success" style={{ marginBottom: 12 }}>
+          <CheckCircle size={16} />
+          <div style={{ flex: 1 }}>
+            <strong>Cluster Fleet Synced!</strong> Connected to ArgoCD &amp; Kubernetes control planes across 5 clusters.
+          </div>
+          <span className="badge badge-success">Healthy</span>
+        </div>
+      )}
+
       {deployingAlert && (
         <div className="alert-banner info" style={{ marginBottom: 12 }}>
           <Rocket size={16} />
@@ -211,10 +232,19 @@ export default function Deployments() {
           <p>Real-time orchestration, automated canary rollouts, and deployment audit history</p>
         </div>
         <div className="page-header-right">
-          <button className="btn btn-ghost btn-sm" onClick={() => setSelectedEnv('ALL')}>
-            <RefreshCw size={13} /> Sync Cluster
+          <button
+            className="btn btn-ghost btn-sm"
+            style={{ cursor: 'pointer' }}
+            onClick={handleSyncCluster}
+            disabled={isSyncing}
+          >
+            <RefreshCw size={13} className={isSyncing ? 'spin' : ''} /> {isSyncing ? 'Syncing...' : 'Sync Cluster'}
           </button>
-          <button className="btn btn-primary btn-sm" onClick={() => setModalOpen(true)}>
+          <button
+            className="btn btn-primary btn-sm"
+            style={{ cursor: 'pointer' }}
+            onClick={() => setModalOpen(true)}
+          >
             <Play size={13} /> Deploy Release
           </button>
         </div>
@@ -222,7 +252,12 @@ export default function Deployments() {
 
       {/* Stats Summary Cards */}
       <div className="stat-cards-grid" style={{ marginBottom: 12 }}>
-        <div className="stat-card">
+        <div
+          className="stat-card"
+          style={{ cursor: 'pointer' }}
+          onClick={() => { setSelectedEnv('ALL'); setSearchQuery(''); }}
+          title="Click to reset filters and view all deployments"
+        >
           <span className="stat-card-label">Total Deployments</span>
           <div className="stat-card-row">
             <span className="stat-card-value">142</span>
@@ -236,7 +271,12 @@ export default function Deployments() {
           </div>
         </div>
 
-        <div className="stat-card">
+        <div
+          className="stat-card"
+          style={{ cursor: 'pointer' }}
+          onClick={() => navigate('/monitoring')}
+          title="Click to inspect live system health and uptime"
+        >
           <span className="stat-card-label">Success Rate</span>
           <div className="stat-card-row">
             <span className="stat-card-value" style={{ color: 'var(--success)' }}>94.3%</span>
@@ -250,7 +290,12 @@ export default function Deployments() {
           </div>
         </div>
 
-        <div className="stat-card">
+        <div
+          className="stat-card"
+          style={{ cursor: 'pointer' }}
+          onClick={() => setLogModal(deployments[0])}
+          title="Click to view live logs of in-flight deployment"
+        >
           <span className="stat-card-label">Active / In-Flight</span>
           <div className="stat-card-row">
             <span className="stat-card-value" style={{ color: '#60a5fa' }}>1</span>
@@ -263,7 +308,12 @@ export default function Deployments() {
           </div>
         </div>
 
-        <div className="stat-card">
+        <div
+          className="stat-card"
+          style={{ cursor: 'pointer' }}
+          onClick={() => navigate('/audit')}
+          title="Click to view full deployment duration reports"
+        >
           <span className="stat-card-label">Avg Deploy Time</span>
           <div className="stat-card-row">
             <span className="stat-card-value">4m 18s</span>
@@ -277,11 +327,23 @@ export default function Deployments() {
           </div>
         </div>
 
-        <div className="stat-card">
+        <div
+          className="stat-card"
+          style={{ cursor: 'pointer' }}
+          onClick={() => navigate('/rollback')}
+          title="Click to open Automated Rollback Console"
+        >
           <span className="stat-card-label">Rollback Rate</span>
           <div className="stat-card-row">
             <span className="stat-card-value" style={{ color: 'var(--warning)' }}>2.1%</span>
-            <div className="stat-card-icon" style={{ background: 'var(--warning-dim)', color: 'var(--warning)' }}>
+            <div
+              className="stat-card-icon"
+              style={{ background: 'var(--warning-dim)', color: 'var(--warning)', cursor: 'pointer' }}
+              onClick={(e) => {
+                e.stopPropagation();
+                navigate('/rollback');
+              }}
+            >
               <RotateCcw size={18} />
             </div>
           </div>
@@ -302,10 +364,18 @@ export default function Deployments() {
           </div>
           <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
             <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>Elapsed: 2m 14s</span>
-            <button className="btn btn-ghost btn-sm" onClick={() => setLogModal(deployments[0])}>
+            <button
+              className="btn btn-ghost btn-sm"
+              style={{ cursor: 'pointer' }}
+              onClick={() => setLogModal(deployments[0])}
+            >
               <Terminal size={12} /> Live Logs
             </button>
-            <button className="btn btn-ghost btn-sm" style={{ color: 'var(--danger)', borderColor: 'var(--danger-border)' }} onClick={() => navigate('/rollback')}>
+            <button
+              className="btn btn-ghost btn-sm"
+              style={{ color: 'var(--danger)', borderColor: 'var(--danger-border)', cursor: 'pointer' }}
+              onClick={() => navigate('/rollback')}
+            >
               <RotateCcw size={12} /> Abort / Rollback
             </button>
           </div>
@@ -465,7 +535,7 @@ export default function Deployments() {
 
       {/* New Deployment Modal */}
       {modalOpen && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 2000 }}>
           <div className="card" style={{ width: 480, maxWidth: '90vw', boxShadow: 'var(--shadow-lg)', border: '1px solid var(--border-accent)' }}>
             <div className="card-header">
               <div className="card-title">
@@ -549,7 +619,7 @@ export default function Deployments() {
 
       {/* Deployment Log Terminal Modal */}
       {logModal && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 2000 }}>
           <div className="card" style={{ width: 680, maxWidth: '92vw', boxShadow: 'var(--shadow-lg)' }}>
             <div className="card-header">
               <div className="card-title">

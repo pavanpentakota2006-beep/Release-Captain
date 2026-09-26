@@ -34,7 +34,16 @@ export default function Releases() {
         <div style={{ flex: 1 }}>
           <strong>Release v2.1.0 is BLOCKED</strong> — Policy violation: Code coverage 67% (required ≥80%) · Awaiting fix &amp; approval
         </div>
-        <button className="btn btn-danger btn-sm">Review <ArrowRight size={13} /></button>
+        <button
+          className="btn btn-danger btn-sm"
+          style={{ cursor: 'pointer' }}
+          onClick={(e) => {
+            e.stopPropagation();
+            navigate('/approvals');
+          }}
+        >
+          Review <ArrowRight size={13} />
+        </button>
       </div>
 
       <div className="section-header">
@@ -43,10 +52,18 @@ export default function Releases() {
           <div className="section-subtitle">{releaseList.length} releases across all environments</div>
         </div>
         <div style={{ display: 'flex', gap: 10 }}>
-          <button className={`btn btn-ghost btn-sm ${filterOpen ? 'btn-primary' : ''}`} onClick={() => setFilterOpen(!filterOpen)}>
+          <button
+            className={`btn btn-ghost btn-sm ${filterOpen ? 'btn-primary' : ''}`}
+            style={{ cursor: 'pointer' }}
+            onClick={() => setFilterOpen(!filterOpen)}
+          >
             <Filter size={13} /> Filter
           </button>
-          <button className="btn btn-primary btn-sm" onClick={() => navigate('/deployments')}>
+          <button
+            className="btn btn-primary btn-sm"
+            style={{ cursor: 'pointer' }}
+            onClick={() => navigate('/deployments')}
+          >
             <Play size={13} /> Deploy Release
           </button>
         </div>
@@ -168,7 +185,7 @@ export default function Releases() {
 
       {/* Release Details Modal */}
       {selectedRelease && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 2000 }}>
           <div className="card" style={{ width: 520, maxWidth: '90vw', boxShadow: 'var(--shadow-lg)' }}>
             <div className="card-header">
               <div className="card-title">

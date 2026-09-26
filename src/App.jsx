@@ -5,7 +5,7 @@ import {
   LayoutDashboard, GitBranch, Package, Rocket, Globe, Cpu,
   BarChart2, Shield, CheckSquare, Activity, RotateCcw,
   FileBarChart, FolderOpen, Settings, Bell, Search,
-  HelpCircle, Zap, ChevronDown, Star, X
+  HelpCircle, Zap, ChevronDown, Star, X, LogOut
 } from 'lucide-react';
 import { currentUser } from './data/mockData.js';
 
@@ -53,7 +53,7 @@ const navGroups = [
   ]},
 ];
 
-function Sidebar({ onOpenCopilot }) {
+function Sidebar({ onOpenCopilot, onLogout }) {
   return (
     <aside className="sidebar">
       {/* Logo */}
@@ -106,13 +106,25 @@ function Sidebar({ onOpenCopilot }) {
         </button>
       </div>
 
+      {/* Sign Out Button in Sidebar */}
+      <div style={{ padding: '0 8px', marginTop: 4, marginBottom: 4 }}>
+        <button
+          className="nav-item"
+          style={{ color: '#f87171', width: '100%', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 9 }}
+          onClick={onLogout}
+          title="Sign out of Release Captain"
+        >
+          <LogOut size={15} />
+          <span>Sign Out</span>
+        </button>
+      </div>
+
       <div className="sidebar-version">Release Captain v1.0.0</div>
     </aside>
   );
 }
 
-function Topbar({ onOpenCopilot }) {
-  const location = useLocation();
+function Topbar({ onOpenCopilot, onLogout }) {
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
   const [searchOpen, setSearchOpen] = useState(false);
@@ -214,6 +226,7 @@ function Topbar({ onOpenCopilot }) {
 
       {/* Right controls */}
       <div className="topbar-right">
+        {/* AI Copilot button */}
         <button className="ai-copilot-btn" onClick={onOpenCopilot}>
           <Cpu size={14} /> AI Copilot
         </button>
@@ -347,6 +360,34 @@ function Topbar({ onOpenCopilot }) {
               >
                 Activity Audit Log
               </button>
+
+              <div style={{ borderTop: '1px solid var(--border-subtle)', marginTop: 4, paddingTop: 4 }}>
+                <button
+                  style={{
+                    width: '100%',
+                    padding: '7px 10px',
+                    background: 'transparent',
+                    border: 'none',
+                    textAlign: 'left',
+                    color: '#f87171',
+                    fontSize: 12,
+                    borderRadius: 4,
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 6
+                  }}
+                  onMouseEnter={(e) => e.currentTarget.style.background = 'var(--danger-dim)'}
+                  onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
+                  onClick={() => {
+                    setUserMenuOpen(false);
+                    onLogout();
+                  }}
+                >
+                  <LogOut size={13} />
+                  <span>Sign Out</span>
+                </button>
+              </div>
             </div>
           )}
         </div>
@@ -393,32 +434,14 @@ function Topbar({ onOpenCopilot }) {
   );
 }
 
-const pageTitles = {
-  '/dashboard':    'Overview',
-  '/pipelines':    'CI/CD Pipelines',
-  '/releases':     'Releases',
-  '/deployments':  'Deployments',
-  '/environments': 'Environments',
-  '/ai':           'AI Command Center',
-  '/risk':         'Risk & Quality',
-  '/security':     'Security Analysis',
-  '/approvals':    'Approvals',
-  '/monitoring':   'Monitoring',
-  '/rollback':     'Rollback',
-  '/audit':        'Reports',
-  '/projects':     'Projects',
-  '/settings':     'Settings',
-};
-
-function AppShell() {
-  const location = useLocation();
+function AppShell({ onLogout }) {
   const [copilotOpen, setCopilotOpen] = useState(false);
 
   return (
     <div className="app-shell">
-      <Sidebar onOpenCopilot={() => setCopilotOpen(true)} />
+      <Sidebar onOpenCopilot={() => setCopilotOpen(true)} onLogout={onLogout} />
       <div className="main-content">
-        <Topbar onOpenCopilot={() => setCopilotOpen(true)} />
+        <Topbar onOpenCopilot={() => setCopilotOpen(true)} onLogout={onLogout} />
         <main className="page-content">
           <Routes>
             <Route path="/"              element={<Navigate to="/dashboard" replace />} />
@@ -436,7 +459,7 @@ function AppShell() {
             <Route path="/rollback"      element={<Rollback />} />
             <Route path="/audit"         element={<AuditLogs />} />
             <Route path="/projects"      element={<Projects />} />
-            <Route path="/settings"      element={<SettingsPage />} />
+            <Route path="/settings"      element={<SettingsPage onLogout={onLogout} />} />
           </Routes>
         </main>
       </div>
@@ -446,15 +469,15 @@ function AppShell() {
 }
 
 export default function App() {
-  const [isLoggedIn] = useState(true);
+  const [isLoggedIn, setIsLoggedIn] = useState(true);
 
   return (
     <BrowserRouter>
       {isLoggedIn ? (
-        <AppShell />
+        <AppShell onLogout={() => setIsLoggedIn(false)} />
       ) : (
         <Routes>
-          <Route path="*" element={<Login onLogin={() => {}} />} />
+          <Route path="*" element={<Login onLogin={() => setIsLoggedIn(true)} />} />
         </Routes>
       )}
     </BrowserRouter>
